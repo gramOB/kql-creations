@@ -1,0 +1,42 @@
+securityresources
+| where type == "microsoft.security/assessments"        
+| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))
+| extend resourceId = trim(' ', tolower(tostring(case(
+    source =~ "azure", properties.resourceDetails.Id,
+    source =~ "aws" and isnotempty(tostring(properties.resourceDetails.ConnectorId)), properties.resourceDetails.Id,
+    source =~ "gcp" and isnotempty(tostring(properties.resourceDetails.ConnectorId)), properties.resourceDetails.Id,
+    source =~ 'aws', properties.resourceDetails.AzureResourceId,
+    source =~ 'gcp', properties.resourceDetails.AzureResourceId,
+    extract('^(.+)/providers/Microsoft.Security/assessments/.+$', 1, id)
+    ))))
+| extend status = trim(" ", tostring(properties.status.code))
+| extend cause = trim(" ", tostring(properties.status.cause))
+| extend resourcedetails = parse_json(properties.resourceDetails)
+| extend additionaldata = parse_json(properties.additionalData)
+| extend subassessment = tostring(additionaldata.subAssessmentsLink)
+| extend imageid = tostring(additionaldata.ImageId)
+| extend digest = substring(imageid, indexof(imageid, "@") + 1)
+| extend resourceName = tostring(resourcedetails.ResourceName)
+| extend assessmentKey = tostring(name)
+| where assessmentKey == "33422d8f-ab1e-42be-bc9a-38685bb567b9"
+| where resourceName contains "{containerImage}"
+| where status contains "{status}"
+| join (
+    securityresources
+    | where type == "microsoft.security/assessments/subassessments" 
+    | extend resourcedetails = parse_json(properties.resourceDetails) 
+    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)
+    | extend digest = tostring(artifactDetails.digest)
+    | extend resourceName = tostring(resourcedetails.ResourceName)
+    )
+    on digest, resourceGroup
+| extend 
+    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), 
+    repositoryName = tostring(artifactDetails.repositoryName), 
+    registryHost = tostring(artifactDetails.registryHost), 
+    digest = tostring(artifactDetails.digest),
+    imageTags = tostring(artifactDetails.tags) |where imageTags contains "{imageTag}"
+    | project-away kind, assessmentKey, location, managedBy, apiVersion, sku, plan, tags, identity, zones, extendedLocation, systemData, source, cause, kind1, location1, managedBy1, sku1, plan1, tags1, identity1, zones1, extendedLocation1 
+    //| project id, id1, name, name1, type, type1, tenantId, tenantId1, resourceGroup, resourceGroup1, subscriptionId, subscriptionId1, properties, properties1, resourcedetails, resourcedetails1, artifactDetails, digest, digest1, pushedDate, repositoryName, registryHost, imageTags, status
+    | summarize repository = make_set(repositoryName), registry = make_set(registryHost), count()  by resourceName, digest, imageTags, pushedDate, status
+    
