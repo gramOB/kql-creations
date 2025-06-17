@@ -1,0 +1,394 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Assessment Filters"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "/subscriptions/..."
+        ],
+        "parameters": [
+          {
+            "id": "bf1a3185-f756-4530-9356-15069a4f7684",
+            "version": "KqlParameterItem/1.0",
+            "name": "_displayName",
+            "label": "Assessment display name",
+            "type": 2,
+            "isRequired": true,
+            "query": "securityresources \r\n| where type == \"microsoft.security/assessments\"\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| where resourceType == \"acr.containerimage\" or resourceType == \"microsoft.containerregistry/registries\" or resourceType contains \"microsoft.containerservice/managedclusters/securityentitydata\" or name == \"c609cf0f-71ab-41e9-a3c6-9a1f7fe1b8d5\" or displayName contains \"[Preview] Containers running in Azure should have vulnerability findings resolved\"\r\n| where displayName != \"Container registries should not allow unrestricted network access\" and displayName != \"Container registries should use private link\"| extend value=displayName, label=displayName\r\n| distinct  value, label",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": "[Preview] Container images in Azure registry should have vulnerability findings resolved"
+          },
+          {
+            "id": "ea7fb6f4-4235-4cf8-b145-c8a1a48bfc8b",
+            "version": "KqlParameterItem/1.0",
+            "name": "resourceName",
+            "label": "Resource Name",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "query": "securityresources \r\n| where type == \"microsoft.security/assessments\"\r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| where resourceType == \"acr.containerimage\" or resourceType == \"microsoft.containerregistry/registries\" or resourceType contains \"microsoft.containerservice/managedclusters/securityentitydata\" or name == \"c609cf0f-71ab-41e9-a3c6-9a1f7fe1b8d5\" or displayName contains \"[Preview] Containers running in Azure should have vulnerability findings resolved\"\r\n| where displayName == '{_displayName}'\r\n| distinct resourceName",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": "healthmonitoringservice"
+          },
+          {
+            "version": "KqlParameterItem/1.0",
+            "name": "resourceType",
+            "label": "(info) Assessed Resource",
+            "type": 1,
+            "isGlobal": true,
+            "query": "securityresources \r\n| where type == \"microsoft.security/assessments\"\r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| where resourceType == \"acr.containerimage\" or resourceType == \"microsoft.containerregistry/registries\" or resourceType contains \"microsoft.containerservice/managedclusters/securityentitydata\" or name == \"c609cf0f-71ab-41e9-a3c6-9a1f7fe1b8d5\" or displayName contains \"[Preview] Containers running in Azure should have vulnerability findings resolved\"\r\n| where displayName ==\"{_displayName}\"\r\n| distinct resourceType",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "id": "1035129a-a65a-48d8-9616-512e74142e5f"
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "Paremeters"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "# Sub-Assessment Filters\r\nFiltering by CVE-ID"
+            },
+            "name": "text - 3"
+          }
+        ]
+      },
+      "name": "group - 4"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "/subscriptions/..."
+        ],
+        "parameters": [
+          {
+            "id": "9882ade1-31ea-40e1-87e8-73e233f123a2",
+            "version": "KqlParameterItem/1.0",
+            "name": "cveId",
+            "label": "CVE ID",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"      \r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| extend link = strcat(\"https://\", tostring(properties.links.azurePortal))\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC)\r\n    | extend imageTags = tostring(artifactDetails.tags)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend cveSeverity = tostring(properties.status.severity)\r\n    | extend fixStatus = tostring(properties.additionalData.softwareDetails.fixStatus)\r\n    | extend evidence = tostring(properties.additionalData.softwareDetails.evidence)\r\n    | extend fixReference = tostring(properties.additionalData.softwareDetails.fixReference.url)\r\n    | extend description = tostring(properties.description)\r\n    | extend vulnVersion = tostring(properties.additionalData.softwareDetails.version)\r\n    | extend fixedVersion = tostring(properties.additionalData.softwareDetails.fixedVersion)\r\n    )\r\n    on resourceName, assessmentKey\r\n| distinct cveId\r\n",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null
+          },
+          {
+            "id": "34dc3f50-48e1-4aa2-822d-7d91982466b6",
+            "version": "KqlParameterItem/1.0",
+            "name": "pushedDate",
+            "label": "Pushed Date",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"      \r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend repository = extract(@\"^[^/]+/([^@]+)@\", 1, imageid)\r\n| extend assessmentKey = tostring(name)\r\n| where displayName == '{_displayName}'\r\n| where resourceName == '{resourceName}'\r\n| extend link = strcat(\"https://\", tostring(properties.links.azurePortal))\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend cveSeverity = tostring(properties.status.severity)\r\n    | extend status = tostring(properties.status.code)\r\n    | extend fixStatus = tostring(properties.additionalData.softwareDetails.fixStatus)\r\n    | extend evidence = tostring(properties.additionalData.softwareDetails.evidence)\r\n    | extend fixReference = tostring(properties.additionalData.softwareDetails.fixReference.url)\r\n    | extend description = tostring(properties.description)\r\n    | extend vulnVersion = tostring(properties.additionalData.softwareDetails.version)\r\n    | extend fixedVersion = tostring(properties.additionalData.softwareDetails.fixedVersion)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n| extend \r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\n    repositoryName = tostring(artifactDetails.repositoryName), \r\n    artifactType = tostring(artifactDetails.artifactType),\r\n    //registryHost = tostring(artifactDetails.registryHost), \r\n    digest = tostring(artifactDetails.digest),\r\n    imageTags = tostring(artifactDetails.tags)  \r\n    | summarize make_set(link) by resourceName, resourceGroup, repositoryName, registryHost, imageTags,digest, pushedDate, status, description, cveId, cveSeverity, evidence,  vulnVersion, fixStatus,fixedVersion,   fixReference\r\n    | where cveId contains \"{cveId}\"\r\n | distinct pushedDate\r\n    \r\n",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null
+          },
+          {
+            "id": "ff39575d-7003-47c9-ba88-c105d7f0f86a",
+            "version": "KqlParameterItem/1.0",
+            "name": "imageTag",
+            "label": "Image Tag",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"        \r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| extend registryHost = substring(imageid, 0, indexof(imageid, \"/\"))\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend cveId = tostring(properties.displayName)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n| extend \r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\n    repositoryName = tostring(artifactDetails.repositoryName), \r\n    //registryHost = tostring(artifactDetails.registryHost), \r\n    digest = tostring(artifactDetails.digest),\r\n    imageTags = tostring(artifactDetails.tags)\r\n    | where cveId contains \"{cveId}\" \r\n    | distinct imageTags",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null
+          },
+          {
+            "id": "4a09ce0f-f9d6-4b5e-9c53-b86ad03f5728",
+            "version": "KqlParameterItem/1.0",
+            "name": "findingRegistryHost",
+            "label": "Registry Host",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"        \r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| extend registryHost = substring(imageid, 0, indexof(imageid, \"/\"))\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n        | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n| extend \r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\n    repositoryName = tostring(artifactDetails.repositoryName), \r\n    //registryHost = tostring(artifactDetails.registryHost), \r\n    digest = tostring(artifactDetails.digest),\r\n    imageTags = tostring(artifactDetails.tags) \r\n    | where pushedDate contains \"{pushedDate}\"\r\n    | where imageTags contains \"{imageTag:escapejson}\"\r\n    | where cveId == \"{cveId}\" \r\n    | distinct registryHost",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null
+          },
+          {
+            "id": "e7454765-2546-4fe7-ba65-cb1d2133d79f",
+            "version": "KqlParameterItem/1.0",
+            "name": "findingRepository",
+            "label": "Repository Name",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"        \r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| extend registryHost = substring(imageid, 0, indexof(imageid, \"/\"))\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n        | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n| extend \r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\n    repositoryName = tostring(artifactDetails.repositoryName), \r\n    //registryHost = tostring(artifactDetails.registryHost), \r\n    digest = tostring(artifactDetails.digest),\r\n    imageTags = tostring(artifactDetails.tags) \r\n        | where pushedDate contains \"{pushedDate}\"\r\n    | where imageTags contains \"{imageTag:escapejson}\"\r\n    | where cveId contains \"{cveId}\" | distinct repositoryName",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null
+          },
+          {
+            "id": "c6b44efc-8c4b-4ef7-8eac-8dda2433c1c8",
+            "version": "KqlParameterItem/1.0",
+            "name": "status",
+            "label": "Status",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"      \r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| extend registryHost = substring(imageid, 0, indexof(imageid, \"/\"))\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| extend link = strcat(\"https://\", tostring(properties.links.azurePortal))\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend cveSeverity = tostring(properties.status.severity)\r\n    | extend status = tostring(properties.status.code)\r\n    | extend fixStatus = tostring(properties.additionalData.softwareDetails.fixStatus)\r\n    | extend evidence = tostring(properties.additionalData.softwareDetails.evidence)\r\n    | extend fixReference = tostring(properties.additionalData.softwareDetails.fixReference.url)\r\n    | extend description = tostring(properties.description)\r\n    | extend vulnVersion = tostring(properties.additionalData.softwareDetails.version)\r\n    | extend fixedVersion = tostring(properties.additionalData.softwareDetails.fixedVersion)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n    | extend\r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\nimageTags = tostring(artifactDetails.tags)\r\n        | where pushedDate contains \"{pushedDate}\"\r\n    | where imageTags contains \"{imageTag:escapejson}\"\r\n    | where cveId contains \"{cveId}\" \r\n| distinct status\r\n",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null
+          },
+          {
+            "version": "KqlParameterItem/1.0",
+            "name": "cveSeverity",
+            "label": "Severity",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"      \r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| extend registryHost = substring(imageid, 0, indexof(imageid, \"/\"))\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| extend link = strcat(\"https://\", tostring(properties.links.azurePortal))\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend cveSeverity = tostring(properties.status.severity)\r\n    | extend status = tostring(properties.status.code)\r\n    | extend fixStatus = tostring(properties.additionalData.softwareDetails.fixStatus)\r\n    | extend evidence = tostring(properties.additionalData.softwareDetails.evidence)\r\n    | extend fixReference = tostring(properties.additionalData.softwareDetails.fixReference.url)\r\n    | extend description = tostring(properties.description)\r\n    | extend vulnVersion = tostring(properties.additionalData.softwareDetails.version)\r\n    | extend fixedVersion = tostring(properties.additionalData.softwareDetails.fixedVersion)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n    | extend pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\nimageTags = tostring(artifactDetails.tags)\r\n    | where pushedDate contains \"{pushedDate}\"\r\n    | where imageTags contains \"{imageTag:escapejson}\"\r\n    | where cveId contains \"{cveId}\" \r\n| distinct cveSeverity\r\n",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null,
+            "id": "1c4d6dfc-2d78-4133-ab60-09c707064ba1"
+          },
+          {
+            "id": "12638662-3350-406b-8da4-828ecbd2f706",
+            "version": "KqlParameterItem/1.0",
+            "name": "description",
+            "label": "CVE Description",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"      \r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| extend link = strcat(\"https://\", tostring(properties.links.azurePortal))\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend cveSeverity = tostring(properties.status.severity)\r\n    | extend fixStatus = tostring(properties.additionalData.softwareDetails.fixStatus)\r\n    | extend evidence = tostring(properties.additionalData.softwareDetails.evidence)\r\n    | extend fixReference = tostring(properties.additionalData.softwareDetails.fixReference.url)\r\n    | extend description = tostring(properties.description)\r\n    | extend vulnVersion = tostring(properties.additionalData.softwareDetails.version)\r\n    | extend fixedVersion = tostring(properties.additionalData.softwareDetails.fixedVersion)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n    | extend\r\npushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\nimageTags = tostring(artifactDetails.tags)\r\n    | where pushedDate contains \"{pushedDate}\"\r\n    | where imageTags contains \"{imageTag:escapejson}\"\r\n    | where cveId contains \"{cveId}\" \r\n| distinct description\r\n",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": null
+          },
+          {
+            "id": "f164b9ae-eddf-4061-89c7-ccc3eb222a59",
+            "version": "KqlParameterItem/1.0",
+            "name": "findingDigest",
+            "label": "Digest",
+            "type": 2,
+            "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"        \r\n| extend status = trim(\" \", tostring(properties.status.code))\r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend digest = substring(imageid, indexof(imageid, \"@\") + 1)\r\n| extend assessmentKey = tostring(name)\r\n| extend registryHost = substring(imageid, 0, indexof(imageid, \"/\"))\r\n| where displayName contains '{_displayName}'\r\n| where resourceName contains '{resourceName}'\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n        | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n| extend \r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\n    repositoryName = tostring(artifactDetails.repositoryName), \r\n    //registryHost = tostring(artifactDetails.registryHost), \r\n    digest = tostring(artifactDetails.digest),\r\n    imageTags = tostring(artifactDetails.tags)    | where pushedDate contains \"{pushedDate}\"\r\n    | where imageTags contains \"{imageTag:escapejson}\"| where cveId contains \"{cveId}\"  | distinct digest",
+            "crossComponentResources": [
+              "/subscriptions/..."
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": "sha256:containerimagehash"
+          },
+          {
+            "id": "d4fe0824-bbd1-4a5c-a4b7-37058bac4760",
+            "version": "KqlParameterItem/1.0",
+            "name": "search",
+            "label": "Search CVE Description",
+            "type": 1,
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "parameters - 1"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"      \r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend repository = extract(@\"^[^/]+/([^@]+)@\", 1, imageid)\r\n| extend assessmentKey = tostring(name)\r\n| where displayName == '{_displayName}'\r\n| where resourceName == '{resourceName}'\r\n| extend link = strcat(\"https://\", tostring(properties.links.azurePortal))\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend cveSeverity = tostring(properties.status.severity)\r\n    | extend status = tostring(properties.status.code)\r\n    | extend fixStatus = tostring(properties.additionalData.softwareDetails.fixStatus)\r\n    | extend evidence = tostring(properties.additionalData.softwareDetails.evidence)\r\n    | extend fixReference = tostring(properties.additionalData.softwareDetails.fixReference.url)\r\n    | extend description = tostring(properties.description)\r\n    | extend vulnVersion = tostring(properties.additionalData.softwareDetails.version)\r\n    | extend fixedVersion = tostring(properties.additionalData.softwareDetails.fixedVersion)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n| extend \r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\n    repositoryName = tostring(artifactDetails.repositoryName), \r\n    artifactType = tostring(artifactDetails.artifactType),\r\n    //registryHost = tostring(artifactDetails.registryHost), \r\n    digest = tostring(artifactDetails.digest),\r\n    imageTags = tostring(artifactDetails.tags)  \r\n    | summarize makeset(link), makeset(description) by repositoryName, registryHost, imageTags,digest, pushedDate, status, cveId, cveSeverity, evidence,  vulnVersion, fixStatus,fixedVersion,   fixReference\r\n    | where pushedDate contains \"{pushedDate}\" \r\n    | where imageTags contains \"{imageTag:escapejson}\"\r\n    | where digest contains \"{findingDigest}\" \r\n    | where registryHost contains \"{findingRegistryHost}\" \r\n    | where cveId contains \"{cveId}\"\r\n        | where cveSeverity contains \"{cveSeverity}\"\r\n        | where status contains \"{status}\"\r\n    | where evidence contains \"{search}\" or cveId contains \"{search}\"\r\n    | where repositoryName contains \"{findingRepository}\"\r\n    \r\n",
+        "size": 0,
+        "showAnalytics": true,
+        "showRefreshButton": true,
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "/subscriptions/..."
+        ],
+        "visualization": "table",
+        "gridSettings": {
+          "filter": true,
+          "sortBy": [
+            {
+              "itemKey": "cveId",
+              "sortOrder": 1
+            }
+          ]
+        },
+        "sortBy": [
+          {
+            "itemKey": "cveId",
+            "sortOrder": 1
+          }
+        ]
+      },
+      "name": "query - 0"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "securityresources\r\n| where type == \"microsoft.security/assessments\"      \r\n| extend cause = trim(\" \", tostring(properties.status.cause))\r\n| extend source = trim(' ', tolower(tostring(properties.resourceDetails.Source)))\r\n| extend resourceType = tostring(properties.resourceDetails.ResourceType)\r\n| extend displayName = tostring(properties.displayName)\r\n| extend resourceName = tostring(properties.resourceDetails.ResourceName)\r\n| extend additionaldata = parse_json(properties.additionalData)\r\n| extend subassessment = tostring(additionaldata.subAssessmentsLink)\r\n| extend imageid = tostring(additionaldata.ImageId)\r\n| extend repository = extract(@\"^[^/]+/([^@]+)@\", 1, imageid)\r\n| extend assessmentKey = tostring(name)\r\n| where displayName == '{_displayName}'\r\n| where resourceName == '{resourceName}'\r\n| extend link = strcat(\"https://\", tostring(properties.links.azurePortal))\r\n| join kind=inner (\r\n    securityresources\r\n    | where type == \"microsoft.security/assessments/subassessments\" \r\n    | extend resourcedetails = parse_json(properties.resourceDetails) \r\n    | extend artifactDetails = parse_json(properties.additionalData.artifactDetails)\r\n    | extend registryHost = tostring(artifactDetails.registryHost)\r\n    | extend digest = tostring(artifactDetails.digest)\r\n    | extend resourceName = tostring(resourcedetails.ResourceName)\r\n    | extend assessmentKey = extract('.*assessments/(.+?)/.*', 1, id)\r\n    | extend cveId = tostring(properties.displayName)\r\n    | extend cveSeverity = tostring(properties.status.severity)\r\n    | extend status = tostring(properties.status.code)\r\n    | extend fixStatus = tostring(properties.additionalData.softwareDetails.fixStatus)\r\n    | extend evidence = tostring(properties.additionalData.softwareDetails.evidence)\r\n    | extend fixReference = tostring(properties.additionalData.softwareDetails.fixReference.url)\r\n    | extend description = tostring(properties.description)\r\n    | extend vulnVersion = tostring(properties.additionalData.softwareDetails.version)\r\n    | extend fixedVersion = tostring(properties.additionalData.softwareDetails.fixedVersion)\r\n    )\r\n    on resourceName, assessmentKey\r\n    //on digest, resourceGroup \r\n| extend \r\n    pushedDate = tostring(artifactDetails.lastPushedToRegistryUTC), \r\n    repositoryName = tostring(artifactDetails.repositoryName), \r\n    artifactType = tostring(artifactDetails.artifactType),\r\n    //registryHost = tostring(artifactDetails.registryHost), \r\n    digest = tostring(artifactDetails.digest),\r\n    imageTags = tostring(artifactDetails.tags)  \r\n    | summarize count() by resourceName, resourceGroup, repositoryName, registryHost, imageTags,digest, pushedDate, status, description, cveId, cveSeverity, evidence,  vulnVersion, fixStatus,fixedVersion,   fixReference\r\n    | where pushedDate contains \"{pushedDate}\" \r\n    | where imageTags contains \"{imageTag:escapejson}\"\r\n    | where digest contains \"{findingDigest}\" \r\n    | where registryHost contains \"{findingRegistryHost}\" \r\n    | where cveId contains \"{cveId}\"\r\n        | where cveSeverity contains \"{cveSeverity}\"\r\n        | where status contains \"{status}\"\r\n    | where description contains \"{search}\" or evidence contains \"{search}\" or cveId contains \"{search}\"\r\n    | where repositoryName contains \"{findingRepository}\"\r\n    \r\n",
+        "size": 0,
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          /subscriptions/...
+        ],
+        "visualization": "piechart",
+        "tileSettings": {
+          "showBorder": false,
+          "titleContent": {
+            "columnMatch": "resourceName",
+            "formatter": 1
+          },
+          "leftContent": {
+            "columnMatch": "count_",
+            "formatter": 12,
+            "formatOptions": {
+              "palette": "auto"
+            },
+            "numberFormat": {
+              "unit": 17,
+              "options": {
+                "maximumSignificantDigits": 3,
+                "maximumFractionDigits": 2
+              }
+            }
+          }
+        },
+        "graphSettings": {
+          "type": 0,
+          "topContent": {},
+          "nodeIdField": "cveId",
+          "sourceIdField": "pushedDate",
+          "targetIdField": "evidence",
+          "graphOrientation": 3,
+          "showOrientationToggles": false,
+          "nodeSize": null,
+          "staticNodeSize": 100,
+          "colorSettings": null,
+          "hivesMargin": 5,
+          "edgeColorSettings": null
+        }
+      },
+      "name": "query - 5"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Security Center"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
