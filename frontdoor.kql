@@ -1,0 +1,53 @@
+let Threshold = 1;
+AzureDiagnostics
+| where Category =~ "FrontDoorWebApplicationFirewallLog"
+| where action_s =~ "AnomalyScoring"
+| where details_msg_s has "XSS"
+| parse details_data_s with MessageText "Matched Data:" MatchedData "AND " * "table_name FROM " TableName " " *
+| project
+    trackingReference_s,
+    host_s,
+    requestUri_s,
+    TimeGenerated,
+    clientIP_s,
+    details_matches_s,
+    details_msg_s,
+    details_data_s,
+    TableName,
+    MatchedData
+| join kind = inner(
+    AzureDiagnostics
+    | where Category =~ "FrontDoorWebApplicationFirewallLog"
+    | where action_s =~ "Block")
+    on trackingReference_s
+| join (
+    AzureDiagnostics
+    | where Category =~ "FrontDoorAccessLog"
+    | project
+        TimeGenerated,
+        httpMethod_s,
+        httpStatusCode_d,
+        httpStatusDetails_s,
+        clientCountry_s,
+        userAgent_s,
+        trackingReference_s)
+    on trackingReference_s
+| extend
+    RequestInfo = pack("URI", requestUri_s, "HTTP_Method", httpMethod_s1, "HTTP_StatusCode", httpStatusCode_d1)
+| summarize
+    Requests = make_list(RequestInfo, 100),
+    URI_s = make_set(requestUri_s, 100),
+    Table = make_set(TableName, 100),
+    StartTime = min(TimeGenerated),
+    EndTime = max(TimeGenerated),
+    TrackingReference = make_set(trackingReference_s, 100),
+    Matched_Data = make_set(MatchedData, 100),
+    HTTP_Method = make_set(httpMethod_s1, 100),
+    HTTP_StatusCode = make_set(httpStatusCode_d1, 100),
+    ClientCountry = make_set(clientCountry_s1, 100),
+    UserAgent = make_set(userAgent_s1),
+    Detail_Data = make_set(details_data_s, 100),
+    Detail_Message = make_set(details_msg_s, 100),
+    Total_TrackingReference = dcount(trackingReference_s)
+    by clientIP_s, host_s, action_s
+    | where Total_TrackingReference >= Threshold
